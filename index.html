@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Saira+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=40" />
+  <link rel="stylesheet" href="style.css?v=43" />
 </head>
 <body>
   <div id="app">
@@ -52,7 +52,7 @@
         </div>
         <div class="modal-section">
           <h3>Game Mode</h3>
-          <p><strong>Classic</strong> — any dynasty, even matchup. <strong>Real GM</strong> — toughest dynasties, tighter cap, and they play 8% harder.</p>
+          <p><strong>Classic</strong> — roll any of the 25 dynasties for a one-off game. <strong>Real GM</strong> — a gauntlet: beat the top 5 dynasties in a row (#5 → #1). Win all five and you're crowned <strong>Dynasty Killer</strong>.</p>
         </div>
         <div class="modal-section">
           <h3>Winning</h3>
@@ -106,7 +106,7 @@
     <!-- SCREEN 2: OPPONENT REVEAL -->
     <section id="revealScreen" class="screen">
       <div class="screen-inner">
-        <p class="eyebrow">⚔️ Your Opponent</p>
+        <p class="eyebrow" id="revealEyebrow">⚔️ Your Opponent</p>
         <div class="reveal-card" id="revealCard">
           <h2 id="revealTeamName" class="team-title"></h2>
           <div id="revealRecord" class="team-record"></div>
@@ -193,6 +193,7 @@
         </div>
         <button id="tryAgainBtn" class="btn-primary btn-xl">🔁 TRY AGAIN — SAME OPPONENT</button>
         <button id="playAgainBtn" class="btn-primary btn-xl" style="background:var(--surface2);color:var(--text);box-shadow:none;">🔄 NEW OPPONENT</button>
+        <div id="gauntletActions" class="gauntlet-actions"></div>
         </div><!-- /finalResult -->
       </div>
     </section>
@@ -203,7 +204,7 @@
     Dynasty Killer is an independent fan project — not affiliated with, endorsed by, or sponsored by the NBA.
   </footer>
 
-  <script src="data.js?v=40"></script>
-  <script src="app.js?v=40"></script>
+  <script src="data.js?v=43"></script>
+  <script src="app.js?v=43"></script>
 </body>
 </html>

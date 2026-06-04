@@ -545,6 +545,9 @@ h2 {
 .matchup-row.win { border-color: var(--green); background: linear-gradient(90deg, rgba(56,211,159,0.1), var(--surface)); }
 .matchup-row.loss { border-color: var(--border); }
 .box-title { font-size: 0.68rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); text-align: center; margin: 6px 0 2px; }
+.gauntlet-actions { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.gauntlet-actions .btn-primary { margin: 0; }
+.streak-note { font-size: 0.9rem; font-weight: 800; color: var(--gold); text-align: center; letter-spacing: 0.3px; }
 
 /* ── Result layout: keep consistent vertical rhythm ── */
 #finalResult { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; }

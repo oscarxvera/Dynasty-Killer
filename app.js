@@ -8,6 +8,25 @@ let spent = 0;          // salary spent so far
 let spinUsed = false;       // used the one re-spin this round
 let eraChangeUsed = false;  // used the one era change this round
 let lastEraKey = null;      // last team+era spun (avoid back-to-back repeats)
+let gauntlet = null;        // Real GM ladder: { order: [#5..#1], stage: 0 }
+
+function rankOf(team) {
+  const ranked = [...LEGENDARY_TEAMS].sort((a, b) => b.rating - a.rating);
+  return ranked.findIndex(t => t.abbr === team.abbr) + 1;
+}
+function startGauntlet() {
+  const ranked = [...LEGENDARY_TEAMS].sort((a, b) => b.rating - a.rating);
+  const top5 = ranked.slice(0, 5);            // #1..#5
+  gauntlet = { order: [top5[4], top5[3], top5[2], top5[1], top5[0]], stage: 0 }; // climb #5 → #1
+  opponent = gauntlet.order[0];
+  lastOppAbbr = opponent.abbr;
+  showReveal();
+}
+function advanceGauntlet() {
+  opponent = gauntlet.order[gauntlet.stage];
+  roster = {}; currentRound = 0; spent = 0;
+  showReveal();
+}
 // POSITIONS is defined in data.js
 const POS_NAMES = { PG: "Point Guard", SG: "Shooting Guard", SF: "Small Forward", PF: "Power Forward", C: "Center" };
 
@@ -16,7 +35,7 @@ const DIFFICULTY = {
   classic: { label: "Classic", budget: 155, oppMult: 1.14, tier: "any", capScale: 3.5,
              desc: "Any dynasty · cap scales to their rank · they play up 14%" },
   realgm:  { label: "Real GM", budget: 135, oppMult: 1.26, tier: "high", capScale: 5,
-             desc: "Toughest dynasties · tight scaled cap · they play up 26%" },
+             desc: "GAUNTLET: beat the top 5 dynasties #5→#1. Win all 5 to be crowned." },
 };
 let difficulty = "classic";
 
@@ -36,8 +55,12 @@ const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
 const pickedPlayers = () => Object.values(roster);
 const openPositions = () => POSITIONS.filter(p => !roster[p]);
 const cfg = () => DIFFICULTY[difficulty];
-// player salary cost from production
-const playerCost = (p) => Math.round(p.ppg + 0.8 * p.rpg + 1.0 * p.apg + 2 * p.spg + 2 * p.bpg);
+// Older eras had inflated counting stats (faster pace, weaker league), so their
+// players cost more to stop you stacking cheap pre-merger legends.
+const ERA_COST_MULT = { '1950s': 1.30, '1960s': 1.28, '1970s': 1.15 };
+// player salary cost from production, adjusted for era
+const playerCost = (p) =>
+  Math.round((p.ppg + 0.8 * p.rpg + 1.0 * p.apg + 2 * p.spg + 2 * p.bpg) * (ERA_COST_MULT[p.era] || 1));
 // single "game score" index from a stat line
 const teamScore = (s, mult = 1) =>
   Math.round((s.ppg + 0.3 * s.rpg + 0.5 * s.apg + 1.2 * s.spg + 1.2 * s.bpg) * mult);
@@ -95,6 +118,7 @@ function pickOpponent(isFinal) {
 
 function rollOpponent() {
   if (isRolling) return;
+  if (difficulty === 'realgm') { gauntlet = null; startGauntlet(); return; }
   isRolling = true;
 
   const card = $('spinCard');
@@ -132,9 +156,11 @@ function teamSpinHTML(icon, name, sub) {
 // ════════════════════════════════════════
 function showReveal() {
   $('revealTeamName').textContent = opponent.name;
-  const ranked = [...LEGENDARY_TEAMS].sort((a, b) => b.rating - a.rating);
-  const rank = ranked.findIndex(t => t.abbr === opponent.abbr) + 1;
+  const rank = rankOf(opponent);
   $('revealRecord').textContent = `${opponent.record}  ·  #${rank} all-time`;
+  $('revealEyebrow').textContent = gauntlet
+    ? `👑 REAL GM · STAGE ${gauntlet.stage + 1} / 5`
+    : '⚔️ Your Opponent';
   $('revealDesc').textContent = opponent.description;
 
   const stats = [
@@ -663,10 +689,50 @@ function revealFinal(sim, yours, theirs) {
     return `<div class="roster-list-item"><b>${pos}</b>${p ? p.name : '—'}
       <span class="rli-stats">${p ? `${p.ppg} pts · ${p.rpg} reb` : ''}</span></div>`;
   }).join('');
+
+  // ── Real GM gauntlet flow ──
+  const ga = $('gauntletActions');
+  if (gauntlet) {
+    $('tryAgainBtn').style.display = 'none';
+    $('playAgainBtn').style.display = 'none';
+    if (won) {
+      gauntlet.stage++;
+      if (gauntlet.stage >= 5) {
+        // crowned!
+        $('resultBadge').textContent = '👑';
+        $('resultTitle').textContent = 'DYNASTY KILLER';
+        $('resultTitle').style.color = 'var(--gold)';
+        $('resultSubtitle').textContent = `You beat all 5 of the greatest dynasties ever — you are a Real GM.`;
+        ga.innerHTML = `<button class="btn-primary btn-xl" id="gauntletDoneBtn">🔄 RUN IT AGAIN</button>`;
+        $('gauntletDoneBtn').onclick = () => { gauntlet = null; fullReset(); };
+      } else {
+        const next = gauntlet.order[gauntlet.stage];
+        $('resultTitle').textContent = `Stage ${gauntlet.stage} Cleared!`;
+        $('resultSubtitle').textContent = `${gauntlet.stage} of 5 dynasties down. Next up: ${next.name} (#${rankOf(next)} all-time).`;
+        ga.innerHTML = `<p class="streak-note">🔥 ${gauntlet.stage}/5 dynasties beaten</p>
+          <button class="btn-primary btn-xl" id="nextStageBtn">NEXT DYNASTY → #${rankOf(next)}</button>`;
+        $('nextStageBtn').onclick = () => advanceGauntlet();
+      }
+    } else {
+      $('resultTitle').textContent = 'Gauntlet Over';
+      $('resultSubtitle').textContent = `You fell at stage ${gauntlet.stage + 1} of 5. Dynasties beaten: ${gauntlet.stage}. Run it back.`;
+      ga.innerHTML = `<p class="streak-note">Reached stage ${gauntlet.stage + 1} / 5</p>
+        <button class="btn-primary btn-xl" id="retryGauntletBtn">🔄 RETRY GAUNTLET</button>
+        <button class="btn-primary btn-xl" id="exitGauntletBtn" style="background:var(--surface2);color:var(--text);box-shadow:none;">EXIT</button>`;
+      $('retryGauntletBtn').onclick = () => { gauntlet = null; startGauntlet(); };
+      $('exitGauntletBtn').onclick = () => { gauntlet = null; fullReset(); };
+    }
+  } else {
+    $('tryAgainBtn').style.display = '';
+    $('playAgainBtn').style.display = '';
+    ga.innerHTML = '';
+  }
 }
 
 function fullReset() {
   if (simTimer) { clearInterval(simTimer); simTimer = null; }
+  gauntlet = null;
+  $('tryAgainBtn').style.display = ''; $('playAgainBtn').style.display = ''; $('gauntletActions').innerHTML = '';
   opponent = null; roster = {}; currentRound = 0; spent = 0; isRolling = false;
   $('restartBtn').classList.add('hidden');
   $('spinCardInner').innerHTML =
