@@ -125,7 +125,7 @@ function showReveal() {
   $('revealTeamName').textContent = opponent.name;
   const ranked = [...LEGENDARY_TEAMS].sort((a, b) => b.rating - a.rating);
   const rank = ranked.findIndex(t => t.abbr === opponent.abbr) + 1;
-  $('revealRecord').textContent = `${opponent.record}  ·  #${rank} of ${LEGENDARY_TEAMS.length} all-time`;
+  $('revealRecord').textContent = `${opponent.record}  ·  #${rank} all-time`;
   $('revealDesc').textContent = opponent.description;
 
   const stats = [
