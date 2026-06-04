@@ -13,12 +13,21 @@ const POS_NAMES = { PG: "Point Guard", SG: "Shooting Guard", SF: "Small Forward"
 
 // ── Difficulty tiers ──
 const DIFFICULTY = {
-  classic: { label: "Classic", budget: 155, oppMult: 1.10, tier: "any",
-             desc: "Any dynasty · $155M cap · they play up 10%" },
-  realgm:  { label: "Real GM", budget: 135, oppMult: 1.22, tier: "high",
-             desc: "Toughest dynasties · $135M cap · they play up 22%" },
+  classic: { label: "Classic", budget: 155, oppMult: 1.10, tier: "any", capScale: 3.5,
+             desc: "Any dynasty · cap scales to their rank · they play up 10%" },
+  realgm:  { label: "Real GM", budget: 135, oppMult: 1.22, tier: "high", capScale: 5,
+             desc: "Toughest dynasties · tight scaled cap · they play up 22%" },
 };
 let difficulty = "classic";
+
+// Weaker dynasties give you a TIGHTER cap, so easy opponents stay competitive.
+// The #1 team gives the full base cap; lower-rated teams shrink it.
+function currentCap() {
+  if (!opponent) return cfg().budget;
+  const maxR = Math.max(...LEGENDARY_TEAMS.map(t => t.rating));
+  const cap = cfg().budget - (maxR - opponent.rating) * cfg().capScale;
+  return Math.max(cfg().budget - 55, Math.round(cap));
+}
 
 // ── Helpers ──
 const $ = (id) => document.getElementById(id);
@@ -167,13 +176,14 @@ function startDraftRound() {
   // reset spin section
   $('playerChoices').classList.add('hidden');
   $('playerChoices').innerHTML = '';
+  $('draftReroll').innerHTML = '';   // chips only show once a roster is on screen
   $('spinSection').style.display = 'flex';
   $('draftSpinInner').innerHTML =
     `<span class="spin-icon">🔄</span><span class="spin-label">Spin for a team &amp; era</span>`;
 }
 
 function renderBudgetBar() {
-  const cap = cfg().budget;
+  const cap = currentCap();
   const remaining = cap - spent;
   const pct = Math.min(100, (spent / cap) * 100);
   $('budgetBar').innerHTML =
@@ -251,6 +261,7 @@ function showPlayerChoices(eraTeam) {
 
 function respin() {
   $('playerChoices').classList.add('hidden');
+  $('draftReroll').innerHTML = '';
   $('spinSection').style.display = 'flex';
   $('draftSpinInner').innerHTML =
     `<span class="spin-icon">🔄</span><span class="spin-label">Spin for a team &amp; decade</span>`;
@@ -273,7 +284,7 @@ function renderPool() {
     return;
   }
 
-  const remaining = cfg().budget - spent;
+  const remaining = currentCap() - spent;
   const open = openPositions();
   currentChoices = poolFull.slice(0, poolShown);
   const moreLeft = poolFull.length - poolShown;
@@ -316,11 +327,14 @@ function renderPool() {
     <div class="pool-controls">
       ${needMinDeal ? `<button class="btn-respin pulse" id="minDealBtn">✍️ Sign ${shortName(minDeal.player.name)} — min deal ($${remaining}M)</button>` : ''}
       ${moreLeft > 0 ? `<button class="btn-respin ${(!usable && helpDeeper) ? 'pulse' : ''}" id="extendBtn">➕ Extend pool (+${Math.min(POOL_STEP, moreLeft)})</button>` : ''}
-      ${!spinUsed ? `<button class="btn-respin" id="respinBtn">🎲 Spin new team (1)</button>` : ''}
-      ${(!eraChangeUsed && otherEras.length) ? `<button class="btn-respin" id="eraBtn">🔁 Change era (1)</button>` : ''}
     </div>`;
   choicesEl.classList.remove('hidden');
   $('spinSection').style.display = 'none';
+
+  // compact one-time reroll chips at the top of the draft screen
+  $('draftReroll').innerHTML =
+    `${!spinUsed ? `<button class="reroll-chip team" id="respinBtn">🔄 Team</button>` : ''}
+     ${(!eraChangeUsed && otherEras.length) ? `<button class="reroll-chip era" id="eraBtn">🔁 Era</button>` : ''}`;
 
   choicesEl.querySelectorAll('.player-card').forEach((card, i) => {
     if (card.classList.contains('unaffordable')) return;
@@ -345,7 +359,7 @@ function signMinDeal(player) {
   const pos = elig[0];
   if (!pos) return;
   roster[pos] = player;
-  spent += Math.min(playerCost(player), cfg().budget - spent); // never exceed the cap
+  spent += Math.min(playerCost(player), currentCap() - spent); // never exceed the cap
   $('restartBtn').classList.remove('hidden');
   currentRound++;
   if (openPositions().length === 0 || currentRound >= 5) setTimeout(showResult, 350);

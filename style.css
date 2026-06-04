@@ -378,7 +378,20 @@ h2 {
 .track-slot.filled .tslot-name { color: var(--text); font-weight: 700; }
 .track-slot.open-hint { border-color: var(--gold); border-style: dashed; }
 
-.draft-progress { width: 100%; text-align: center; }
+.draft-progress { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; }
+.draft-reroll { display: flex; gap: 8px; }
+.reroll-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 11px; border-radius: 8px; cursor: pointer;
+  background: var(--surface); border: 1.5px solid var(--border-light);
+  font-size: 0.74rem; font-weight: 800; letter-spacing: 0.3px;
+  transition: all 0.15s; white-space: nowrap;
+}
+.reroll-chip.team { color: var(--gold); }
+.reroll-chip.team:hover { border-color: var(--gold); background: rgba(232,101,30,0.12); }
+.reroll-chip.era { color: #a98bff; }
+.reroll-chip.era:hover { border-color: #a98bff; background: rgba(169,139,255,0.12); }
+.reroll-chip:active { transform: scale(0.95); }
 .round-num { font-family: 'Saira Condensed', sans-serif; font-size: 1.05rem; font-weight: 600; color: var(--gold); letter-spacing: 1px; }
 
 .spin-section {
