@@ -13,10 +13,10 @@ const POS_NAMES = { PG: "Point Guard", SG: "Shooting Guard", SF: "Small Forward"
 
 // ── Difficulty tiers ──
 const DIFFICULTY = {
-  classic: { label: "Classic", budget: 155, oppMult: 1.10, tier: "any", capScale: 3.5,
-             desc: "Any dynasty · cap scales to their rank · they play up 10%" },
-  realgm:  { label: "Real GM", budget: 135, oppMult: 1.22, tier: "high", capScale: 5,
-             desc: "Toughest dynasties · tight scaled cap · they play up 22%" },
+  classic: { label: "Classic", budget: 155, oppMult: 1.14, tier: "any", capScale: 3.5,
+             desc: "Any dynasty · cap scales to their rank · they play up 14%" },
+  realgm:  { label: "Real GM", budget: 135, oppMult: 1.26, tier: "high", capScale: 5,
+             desc: "Toughest dynasties · tight scaled cap · they play up 26%" },
 };
 let difficulty = "classic";
 
