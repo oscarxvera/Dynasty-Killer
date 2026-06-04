@@ -369,9 +369,16 @@ function renderPool() {
     poolShown = Math.min(poolShown + POOL_STEP, poolFull.length);
     renderPool();
   });
-  if ($('respinBtn')) $('respinBtn').addEventListener('click', () => { spinUsed = true; respin(); });
+  if ($('respinBtn')) $('respinBtn').addEventListener('click', () => {
+    spinUsed = true;
+    // change the TEAM only — keep the same decade/era
+    const sameEra = ERA_TEAMS.filter(e => e.era === poolEra.era && e.team !== poolEra.team);
+    if (sameEra.length) showPlayerChoices(rand(sameEra));
+    else respin();
+  });
   if ($('eraBtn')) $('eraBtn').addEventListener('click', () => {
     eraChangeUsed = true;
+    // change the ERA only — keep the same team (otherEras = same team, different era)
     showPlayerChoices(rand(otherEras));
   });
   if ($('minDealBtn')) $('minDealBtn').addEventListener('click', () => signMinDeal(minDeal.player));
