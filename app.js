@@ -34,7 +34,7 @@ const POS_NAMES = { PG: "Point Guard", SG: "Shooting Guard", SF: "Small Forward"
 const DIFFICULTY = {
   classic: { label: "Classic", budget: 150, oppMult: 1.05, tier: "any",
              desc: "Roll any of the 25 dynasties · $150M cap · one-off game." },
-  realgm:  { label: "Real GM", budget: 160, oppMult: 1.02, tier: "high",
+  realgm:  { label: "Real GM", budget: 155, oppMult: 1.02, tier: "high",
              desc: "GAUNTLET: beat the top 5 dynasties #5→#1. Win all 5 to be crowned." },
 };
 let difficulty = "classic";
@@ -175,6 +175,8 @@ $('startDraftBtn').addEventListener('click', () => {
   roster = {};
   currentRound = 0;
   spent = 0;
+  spinUsed = false;       // one Team respin per dynasty (whole draft)
+  eraChangeUsed = false;  // one Era change per dynasty (whole draft)
   startDraftRound();
   showScreen('draftScreen');
 });
@@ -190,8 +192,8 @@ function startDraftRound() {
      <span class="opp-rec">${opponent.record}</span>`;
 
   $('roundNum').textContent = `Round ${currentRound + 1} / 5`;
-  spinUsed = false;       // refresh the one re-spin each round
-  eraChangeUsed = false;  // refresh the one era change each round
+  // NOTE: spinUsed / eraChangeUsed are NOT reset here — they're one-per-dynasty,
+  // reset only when a new draft starts (Start Drafting), not each round.
 
   renderBudgetBar();
   renderRosterTrack();
