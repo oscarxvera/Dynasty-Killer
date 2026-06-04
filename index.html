@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Saira+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=49" />
+  <link rel="stylesheet" href="style.css?v=50" />
 </head>
 <body>
   <div id="app">
@@ -184,6 +184,10 @@
         <div id="resultBadge" class="result-badge"></div>
         <h2 id="resultTitle" class="result-title"></h2>
         <p id="resultSubtitle" class="result-subtitle"></p>
+        <div class="share-row">
+          <button class="share-btn" id="copyTextBtn">📋 Copy Result</button>
+          <button class="share-btn primary" id="shareImgBtn">📸 Share Image</button>
+        </div>
         <div class="matchup-grid" id="matchupGrid"></div>
         <div class="teams-compare">
           <div class="compare-col">
@@ -204,7 +208,9 @@
     Dynasty Killer is an independent fan project — not affiliated with, endorsed by, or sponsored by the NBA.
   </footer>
 
-  <script src="data.js?v=49"></script>
-  <script src="app.js?v=49"></script>
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="data.js?v=50"></script>
+  <script src="app.js?v=50"></script>
 </body>
 </html>

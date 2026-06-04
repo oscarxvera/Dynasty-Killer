@@ -9,6 +9,7 @@ let spinUsed = false;       // used the one re-spin this round
 let eraChangeUsed = false;  // used the one era change this round
 let lastEraKey = null;      // last team+era spun (avoid back-to-back repeats)
 let gauntlet = null;        // Real GM ladder: { order: [#5..#1], stage: 0 }
+let lastResult = null;      // snapshot of the last finished game (for sharing)
 
 function rankOf(team) {
   const ranked = [...LEGENDARY_TEAMS].sort((a, b) => b.rating - a.rating);
@@ -733,6 +734,14 @@ function revealFinal(sim, yours, theirs) {
     $('playAgainBtn').style.display = '';
     ga.innerHTML = '';
   }
+
+  // snapshot for sharing
+  lastResult = {
+    mode: cfg().label, won, you: sim.you, them: sim.them,
+    oppName: opponent.name, oppAbbr: opponent.abbr, rank: rankOf(opponent),
+    roster: POSITIONS.map(pos => ({ pos, name: roster[pos] ? roster[pos].name : '—' })),
+    gauntlet: gauntlet ? { stage: gauntlet.stage } : null,
+  };
 }
 
 function fullReset() {
@@ -755,4 +764,114 @@ $('tryAgainBtn').addEventListener('click', () => {
   roster = {}; currentRound = 0; spent = 0;
   startDraftRound();
   showScreen('draftScreen');
+});
+
+// ════════════════════════════════════════
+// SHARING
+// ════════════════════════════════════════
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  requestAnimationFrame(() => t.classList.add('show'));
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.classList.add('hidden'), 250); }, 1900);
+}
+
+// Wordle-style copyable text
+function buildShareText(r) {
+  if (r.gauntlet) {
+    const cleared = r.gauntlet.stage;
+    if (r.won && cleared >= 5)
+      return `🏀 DYNASTY KILLER — Real GM 👑\n🏆🏆🏆🏆🏆 CROWNED — beat all 5 dynasties!\nFinal vs ${r.oppAbbr}: ${r.you}–${r.them}\nDraft a team. Beat the legends.`;
+    if (!r.won) {
+      const grid = '🏆'.repeat(cleared) + '🟥' + '⬜'.repeat(Math.max(0, 4 - cleared));
+      return `🏀 DYNASTY KILLER — Real GM\n${grid}  fell at stage ${cleared + 1} (${r.oppAbbr})\nDraft a team. Beat the legends.`;
+    }
+    const grid = '🏆'.repeat(cleared) + '⬜'.repeat(5 - cleared);
+    return `🏀 DYNASTY KILLER — Real GM\n${grid}  ${cleared}/5 cleared — still climbing…`;
+  }
+  const emo = r.won ? '🏆' : '💀';
+  return `🏀 DYNASTY KILLER — Classic\n${emo} ${r.won ? 'Beat' : 'Lost to'} ${r.oppName} ${r.you}–${r.them}\nDraft a team. Beat the legends.`;
+}
+
+$('copyTextBtn').addEventListener('click', async () => {
+  if (!lastResult) return;
+  const text = buildShareText(lastResult);
+  try { await navigator.clipboard.writeText(text); toast('Result copied! Paste it anywhere 📋'); }
+  catch (e) { toast('Copy failed — long-press to copy'); }
+});
+
+// Canvas result card
+function drawShareCard(r) {
+  const W = 1080, H = 1080, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  // bg
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0d141c'); g.addColorStop(1, '#070a0e');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  // glow
+  const rg = x.createRadialGradient(W/2, 120, 50, W/2, 120, 700);
+  rg.addColorStop(0, 'rgba(232,101,30,0.18)'); rg.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = rg; x.fillRect(0, 0, W, H);
+  x.textAlign = 'center';
+  // wordmark
+  x.font = '900 italic 64px "Saira Condensed", sans-serif';
+  x.fillStyle = '#f2f4f7'; x.fillText('DYNASTY', W/2 - 8, 130);
+  const dw = x.measureText('DYNASTY ').width;
+  x.fillStyle = '#e8651e'; x.font = '900 italic 64px "Saira Condensed", sans-serif';
+  x.fillText('KILLER', W/2, 200);
+  // badge + headline
+  const crowned = r.gauntlet && r.won && r.gauntlet.stage >= 5;
+  x.font = '120px sans-serif';
+  x.fillText(crowned ? '👑' : (r.won ? '🏆' : '💀'), W/2, 360);
+  x.font = '800 italic 60px "Saira Condensed", sans-serif';
+  x.fillStyle = r.won ? '#e8651e' : '#ff5b5b';
+  x.fillText(crowned ? 'DYNASTY KILLER' : (r.won ? 'BEAT THE DYNASTY' : 'THE DYNASTY STANDS'), W/2, 440);
+  // score
+  x.fillStyle = '#f2f4f7'; x.font = '700 150px "Saira Condensed", sans-serif';
+  x.fillText(`${r.you} – ${r.them}`, W/2, 590);
+  x.font = '700 30px Inter, sans-serif'; x.fillStyle = '#8a93a0';
+  x.fillText(`YOUR TEAM            ${r.oppAbbr}`, W/2, 640);
+  // roster
+  x.textAlign = 'left';
+  let yy = 730;
+  r.roster.forEach(p => {
+    x.font = '900 30px "Saira Condensed", sans-serif'; x.fillStyle = '#e8651e';
+    x.fillText(p.pos, 230, yy);
+    x.font = '700 38px Inter, sans-serif'; x.fillStyle = '#f2f4f7';
+    x.fillText(p.name, 300, yy);
+    yy += 58;
+  });
+  // footer
+  x.textAlign = 'center';
+  x.font = '700 30px Inter, sans-serif'; x.fillStyle = '#8a93a0';
+  x.fillText(`${r.mode} · vs ${r.oppName}`, W/2, 1010);
+  x.font = '800 italic 26px "Saira Condensed", sans-serif'; x.fillStyle = '#5a626d';
+  x.fillText('DRAFT A TEAM. BEAT THE LEGENDS.', W/2, 1050);
+  return c;
+}
+
+$('shareImgBtn').addEventListener('click', async () => {
+  if (!lastResult) return;
+  try { await document.fonts.ready; } catch (e) {}
+  const canvas = drawShareCard(lastResult);
+  canvas.toBlob(async (blob) => {
+    const file = new File([blob], 'dynasty-killer.png', { type: 'image/png' });
+    // 1) native share sheet (mobile)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], text: buildShareText(lastResult) }); return; }
+      catch (e) { if (e.name === 'AbortError') return; }
+    }
+    // 2) copy image to clipboard (desktop)
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      toast('Image copied to clipboard! 📸'); return;
+    } catch (e) {}
+    // 3) download fallback
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'dynasty-killer.png'; a.click();
+    URL.revokeObjectURL(a.href); toast('Image saved 📸');
+  }, 'image/png');
 });
