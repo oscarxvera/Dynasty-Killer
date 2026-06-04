@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Dynasty Killer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Saira+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=29" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- HEADER -->
+    <header>
+      <!-- Compact wordmark -->
+      <div class="dk-mini">
+        <svg class="dk-ball-sm" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="44" stroke="#e8651e" stroke-width="8" fill="none"/>
+          <line x1="50" y1="6" x2="50" y2="94" stroke="#e8651e" stroke-width="8"/>
+          <line x1="6" y1="50" x2="94" y2="50" stroke="#e8651e" stroke-width="8"/>
+          <path d="M16 20 C40 40 40 60 16 80" stroke="#e8651e" stroke-width="8" fill="none"/>
+          <path d="M84 20 C60 40 60 60 84 80" stroke="#e8651e" stroke-width="8" fill="none"/>
+        </svg>
+        <span class="dk-mini-text"><span class="dyn">DYNASTY</span><span class="kil">KILLER</span></span>
+      </div>
+      <div class="header-actions">
+        <button id="restartBtn" class="btn-icon hidden" title="Restart game">⟲</button>
+        <button id="howToPlayBtn" class="btn-icon" title="How to Play">?</button>
+      </div>
+    </header>
+
+    <!-- HOW TO PLAY MODAL -->
+    <div id="howToPlayModal" class="modal hidden">
+      <div class="modal-box">
+        <button class="modal-close" id="modalCloseBtn">×</button>
+        <h2>How to Play</h2>
+        <div class="modal-section">
+          <h3>The Mission</h3>
+          <p>Roll a legendary all-time NBA dynasty — then draft a squad good enough to <strong>beat them statistically</strong>.</p>
+        </div>
+        <div class="modal-section">
+          <h3>The Draft</h3>
+          <p>Each round, spin to land on a real franchise &amp; decade.</p>
+          <p>You'll see <strong>every player</strong> who actually suited up for that team in that decade — scroll the list.</p>
+          <p>Pick one, then <strong>assign them to any open position</strong>.</p>
+        </div>
+        <div class="modal-section">
+          <h3>Salary Cap</h3>
+          <p>Every player has a <strong>cost</strong> based on their stats. You've got a budget — you <strong>can't just grab the 5 best</strong>. Make tradeoffs.</p>
+        </div>
+        <div class="modal-section">
+          <h3>Game Mode</h3>
+          <p><strong>Classic</strong> — any dynasty, even matchup. <strong>Real GM</strong> — toughest dynasties, tighter cap, and they play 8% harder.</p>
+        </div>
+        <div class="modal-section">
+          <h3>Winning</h3>
+          <p>Fill all 5 spots: <span class="pos-tag">PG</span> <span class="pos-tag">SG</span> <span class="pos-tag">SF</span> <span class="pos-tag">PF</span> <span class="pos-tag">C</span></p>
+          <p>Your five and theirs become a <strong>simulated final score</strong> from all five stats — <strong>outscore the dynasty</strong> to win.</p>
+        </div>
+        <button class="btn-primary" id="modalGotItBtn">Let's Go</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 1: ROLL -->
+    <section id="rollScreen" class="screen active">
+      <div class="screen-inner">
+        <!-- Full hero logo -->
+        <div class="dk-logo">
+          <div class="dk-rule-row">
+            <span class="dk-rule"></span>
+            <svg class="dk-ball" viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="50" r="44" stroke="#e8651e" stroke-width="7" fill="none"/>
+              <line x1="50" y1="6" x2="50" y2="94" stroke="#e8651e" stroke-width="7"/>
+              <line x1="6" y1="50" x2="94" y2="50" stroke="#e8651e" stroke-width="7"/>
+              <path d="M16 20 C40 40 40 60 16 80" stroke="#e8651e" stroke-width="7" fill="none"/>
+              <path d="M84 20 C60 40 60 60 84 80" stroke="#e8651e" stroke-width="7" fill="none"/>
+            </svg>
+            <span class="dk-rule"></span>
+          </div>
+          <div class="dk-dynasty">DYNASTY</div>
+          <div class="dk-killer">KILLER</div>
+          <div class="dk-rule-row dk-tag-row">
+            <span class="dk-rule short"></span>
+            <span class="dk-tag">DRAFT A TEAM. BEAT THE LEGENDS.</span>
+            <span class="dk-rule short"></span>
+          </div>
+        </div>
+
+        <p class="subtitle">Spin to draw an all-time great dynasty — then build a squad to take them down.</p>
+        <div class="difficulty-select" id="difficultySelect">
+          <button class="diff-chip active" data-diff="classic">CLASSIC</button>
+          <button class="diff-chip" data-diff="realgm">REAL GM</button>
+        </div>
+        <p class="diff-desc" id="diffDesc"></p>
+        <div id="spinCard" class="spin-card">
+          <div class="spin-card-inner" id="spinCardInner">
+            <span class="spin-icon">🎲</span>
+            <span class="spin-label">Roll your opponent</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: OPPONENT REVEAL -->
+    <section id="revealScreen" class="screen">
+      <div class="screen-inner">
+        <p class="eyebrow">⚔️ Your Opponent</p>
+        <div class="reveal-card" id="revealCard">
+          <h2 id="revealTeamName" class="team-title"></h2>
+          <div id="revealRecord" class="team-record"></div>
+          <p id="revealDesc" class="team-desc"></p>
+          <div id="revealStats" class="stat-grid"></div>
+        </div>
+        <p class="challenge-text">Can your draft topple them?</p>
+        <button id="startDraftBtn" class="btn-primary btn-xl">START DRAFTING ⚡</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: DRAFT -->
+    <section id="draftScreen" class="screen">
+      <div class="screen-inner draft-inner">
+        <div id="opponentBar" class="opponent-bar"></div>
+        <div id="budgetBar" class="budget-bar"></div>
+        <div class="roster-track" id="rosterTrack"></div>
+        <div class="draft-progress">
+          <span id="roundNum" class="round-num">Round 1 / 5</span>
+        </div>
+
+        <!-- Spin section -->
+        <div id="spinSection" class="spin-section">
+          <div id="draftSpinCard" class="spin-card spin-card-sm">
+            <div class="spin-card-inner" id="draftSpinInner">
+              <span class="spin-icon">🔄</span>
+              <span class="spin-label">Spin for a team &amp; decade</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Player choices (scrollable) -->
+        <div id="playerChoices" class="player-choices hidden"></div>
+      </div>
+    </section>
+
+    <!-- POSITION PICKER MODAL -->
+    <div id="posPickerModal" class="modal hidden">
+      <div class="modal-box pos-picker-box">
+        <button class="modal-close" id="posPickerClose">×</button>
+        <p class="picker-eyebrow">Assign Position</p>
+        <h2 id="pickerPlayerName"></h2>
+        <p id="pickerPlayerMeta" class="picker-meta"></p>
+        <p class="picker-prompt">Where does this player go?</p>
+        <div id="posPickerOptions" class="pos-picker-options"></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: RESULT -->
+    <section id="resultScreen" class="screen">
+      <div class="screen-inner">
+
+        <!-- Live game simulation -->
+        <div id="liveSim" class="live-sim hidden">
+          <div class="live-scoreboard">
+            <div class="ls-team"><div class="ls-name">YOUR TEAM</div><div class="ls-pts" id="lsYou">0</div></div>
+            <div class="ls-mid"><div class="ls-q" id="lsQ">TIP-OFF</div><div class="ls-clock" id="lsClock">0:00</div></div>
+            <div class="ls-team"><div class="ls-name" id="lsOppName">OPP</div><div class="ls-pts" id="lsThem">0</div></div>
+          </div>
+          <div class="sim-speed" id="simSpeed">
+            <span class="ss-label">Simulation&nbsp;Speed</span>
+            <button class="ss-chip" data-speed="vslow">Very&nbsp;Slow</button>
+            <button class="ss-chip" data-speed="slow">Slow</button>
+            <button class="ss-chip active" data-speed="medium">Medium</button>
+            <button class="ss-chip" data-speed="fast">Fast</button>
+            <button class="ss-chip" data-speed="vfast">Very&nbsp;Fast</button>
+          </div>
+          <div class="pbp" id="pbp"></div>
+          <button class="btn-respin" id="skipSimBtn">Skip to final ▶▶</button>
+        </div>
+
+        <!-- Final result (revealed after sim) -->
+        <div id="finalResult">
+        <div id="resultBadge" class="result-badge"></div>
+        <h2 id="resultTitle" class="result-title"></h2>
+        <p id="resultSubtitle" class="result-subtitle"></p>
+        <div class="matchup-grid" id="matchupGrid"></div>
+        <div class="teams-compare">
+          <div class="compare-col">
+            <p class="compare-label">Your Team</p>
+            <div id="yourRosterResult" class="roster-list"></div>
+          </div>
+        </div>
+        <button id="tryAgainBtn" class="btn-primary btn-xl">🔁 TRY AGAIN — SAME OPPONENT</button>
+        <button id="playAgainBtn" class="btn-primary btn-xl" style="background:var(--surface2);color:var(--text);box-shadow:none;">🔄 NEW OPPONENT</button>
+        </div><!-- /finalResult -->
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="site-footer">
+    Dynasty Killer is an independent fan project — not affiliated with, endorsed by, or sponsored by the NBA.
+  </footer>
+
+  <script src="data.js?v=29"></script>
+  <script src="app.js?v=29"></script>
+</body>
+</html>
