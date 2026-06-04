@@ -13,10 +13,10 @@ const POS_NAMES = { PG: "Point Guard", SG: "Shooting Guard", SF: "Small Forward"
 
 // ── Difficulty tiers ──
 const DIFFICULTY = {
-  classic: { label: "Classic", budget: 155, oppMult: 1.00, tier: "any",
-             desc: "Any dynasty · $155M cap · even matchup" },
-  realgm:  { label: "Real GM", budget: 135, oppMult: 1.08, tier: "high",
-             desc: "Toughest dynasties · $135M cap · they play up 8%" },
+  classic: { label: "Classic", budget: 155, oppMult: 1.10, tier: "any",
+             desc: "Any dynasty · $155M cap · they play up 10%" },
+  realgm:  { label: "Real GM", budget: 135, oppMult: 1.22, tier: "high",
+             desc: "Toughest dynasties · $135M cap · they play up 22%" },
 };
 let difficulty = "classic";
 
@@ -430,14 +430,15 @@ const surname = (n) => n.split(' ').slice(-1)[0];
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 // ── Possession-based game engine ──
-function simulateGame(home, away, awayMult) {
+function simulateGame(home, away, awayMult, homeMult) {
+  homeMult = homeMult || 1;
   const QTRS = 4, POSS_PER_Q = 25;          // 100 possessions/team
   const THREE_RATE = 0.34, MADE_VAL = 2 * (1 - THREE_RATE) + 3 * THREE_RATE;
   const sumS = (t, s) => t.reduce((a, p) => a + (p[s] || 0), 0);
   const combo = (t) => ({ ppg: sumS(t,'ppg'), rpg: sumS(t,'rpg'), apg: sumS(t,'apg'), spg: sumS(t,'spg'), bpg: sumS(t,'bpg') });
 
-  const hOP = teamScore(combo(home));
-  const aOP = teamScore(combo(away), awayMult);
+  const hOP = teamScore(combo(home), homeMult);   // your team scaled by chemistry
+  const aOP = teamScore(combo(away), awayMult);   // dynasty scaled by difficulty edge
   const hPPP = hOP / (QTRS * POSS_PER_Q);
   const aPPP = aOP / (QTRS * POSS_PER_Q);
 
@@ -522,7 +523,15 @@ function showResult() {
     spg: opponent.spg || 0, bpg: opponent.bpg || 0,
   };
 
-  const sim = simulateGame(players, away, cfg().oppMult);
+  // Chemistry: your 5 never played together (x0.97 baseline), but reward drafting
+  // multiple starters from the SAME franchise+decade (+4% per such pair, capped).
+  const groups = {};
+  players.forEach(p => { const k = `${p.team}|${p.era}`; groups[k] = (groups[k] || 0) + 1; });
+  let pairs = 0;
+  Object.values(groups).forEach(n => { pairs += (n * (n - 1)) / 2; });
+  const chemFactor = 0.97 + Math.min(0.16, 0.04 * pairs); // up to +16%
+
+  const sim = simulateGame(players, away, cfg().oppMult, chemFactor);
 
   // prep UI: show live sim, hide final
   $('finalResult').classList.add('hidden');
