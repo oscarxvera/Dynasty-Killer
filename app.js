@@ -32,20 +32,17 @@ const POS_NAMES = { PG: "Point Guard", SG: "Shooting Guard", SF: "Small Forward"
 
 // ── Difficulty tiers ──
 const DIFFICULTY = {
-  classic: { label: "Classic", budget: 155, oppMult: 1.14, tier: "any", capScale: 3.5,
-             desc: "Any dynasty · cap scales to their rank · they play up 14%" },
-  realgm:  { label: "Real GM", budget: 135, oppMult: 1.26, tier: "high", capScale: 5,
+  classic: { label: "Classic", budget: 150, oppMult: 1.05, tier: "any",
+             desc: "Roll any of the 25 dynasties · $150M cap · one-off game." },
+  realgm:  { label: "Real GM", budget: 160, oppMult: 1.02, tier: "high",
              desc: "GAUNTLET: beat the top 5 dynasties #5→#1. Win all 5 to be crowned." },
 };
 let difficulty = "classic";
 
-// Weaker dynasties give you a TIGHTER cap, so easy opponents stay competitive.
-// The #1 team gives the full base cap; lower-rated teams shrink it.
+// Flat cap per mode. (Difficulty now comes from the opponent's real strength —
+// ratings reflect actual sim power — so the cap no longer needs to scale by rank.)
 function currentCap() {
-  if (!opponent) return cfg().budget;
-  const maxR = Math.max(...LEGENDARY_TEAMS.map(t => t.rating));
-  const cap = cfg().budget - (maxR - opponent.rating) * cfg().capScale;
-  return Math.max(cfg().budget - 55, Math.round(cap));
+  return cfg().budget;
 }
 
 // ── Helpers ──
